@@ -1,6 +1,7 @@
 package quic
 
 import (
+	"crypto/tls"
 	"net"
 
 	"github.com/lucas-clemente/quic-go/utils"
@@ -19,4 +20,33 @@ type Session interface {
 	// OpenStreamSync() (utils.Stream, error)
 	RemoteAddr() net.Addr
 	Close(error) error
+}
+
+// ConnState is the status of the connection
+type ConnState int
+
+const (
+	// ConnStateVersionNegotiated means that version negotiation is complete
+	ConnStateVersionNegotiated ConnState = iota
+	// ConnStateSecure means that the connection is encrypted
+	ConnStateSecure
+	// ConnStateForwardSecure means that the connection is forward secure
+	ConnStateForwardSecure
+)
+
+type connStateCallback func(Session, ConnState)
+
+// Config is the configuration for QUIC
+type Config struct {
+	TLSConfig *tls.Config
+	// will be called in a separate goroutine
+	ConnState connStateCallback
+}
+
+// A Listener listens for incoming QUIC connections
+type Listener interface {
+	Close() error
+	Addr() net.Addr
+	ListenAddr(addr string) error
+	Listen(conn net.PacketConn) error
 }
