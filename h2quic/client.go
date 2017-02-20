@@ -21,7 +21,7 @@ import (
 )
 
 type quicClient interface {
-	OpenStream() (utils.Stream, error)
+	OpenStream() (quic.Stream, error)
 	Close(error) error
 	Listen() error
 }
@@ -37,7 +37,7 @@ type Client struct {
 	encryptionLevel protocol.EncryptionLevel
 
 	client        quicClient
-	headerStream  utils.Stream
+	headerStream  quic.Stream
 	headerErr     *qerr.QuicError
 	requestWriter *requestWriter
 
@@ -65,7 +65,7 @@ func NewClient(t *QuicRoundTripper, tlsConfig *tls.Config, hostname string) (*Cl
 	return c, nil
 }
 
-func (c *Client) handleStreamCb(session *quic.Session, stream utils.Stream) {
+func (c *Client) handleStreamCb(session *quic.Session, stream quic.Stream) {
 	utils.Debugf("Handling stream %d", stream.StreamID())
 }
 
@@ -245,7 +245,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	return res, nil
 }
 
-func (c *Client) writeRequestBody(dataStream utils.Stream, body io.ReadCloser) (err error) {
+func (c *Client) writeRequestBody(dataStream quic.Stream, body io.ReadCloser) (err error) {
 	defer func() {
 		cerr := body.Close()
 		if err == nil {
